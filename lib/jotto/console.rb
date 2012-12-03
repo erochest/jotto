@@ -1,5 +1,5 @@
 module Jotto
-  class Jotto
+  class Console
 
   end
 end

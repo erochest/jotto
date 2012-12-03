@@ -1,7 +1,7 @@
 
 require 'jotto'
 module Jotto
-  describe Jotto do
+  describe Game do
     subject do
       dict = double('dictionary')
       dict.stub(:random_word).and_return('zzzzz', 'yyyyy')
@@ -11,7 +11,7 @@ module Jotto
       secret.stub(:word => 'abcde')
       secret.stub(:get_matches).and_return(4, 3, 2)
 
-      Jotto.new(10, dict, secret)
+      Game.new(10, dict, secret)
     end
 
     it "should initialize to no guesses." do
@@ -79,7 +79,7 @@ module Jotto
         secret.stub(:is_word?).and_return(false)
         secret.stub(:word => 'abcde')
         secret.stub(:get_matches).and_return(4, 3, 2, 0)
-        jotto = Jotto.new(5, subject.dict, secret)
+        jotto = Game.new(5, subject.dict, secret)
 
         jotto.guess('aaaaa')[:over].should eq(false)
         jotto.guess('bbbbb')[:over].should eq(false)

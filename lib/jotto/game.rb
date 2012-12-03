@@ -1,5 +1,5 @@
 module Jotto
-  class JottoConsole
+  class Game
 
   end
 end

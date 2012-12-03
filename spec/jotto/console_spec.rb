@@ -18,7 +18,7 @@ module Jotto
     )
   end
 
-  describe JottoConsole do
+  describe Console do
     subject do
       secret = double('secret')
       secret.stub(:length => 5)
@@ -28,7 +28,7 @@ module Jotto
       jotto.stub(:guess_count => 0)
       jotto.stub(:max_guess_count => 3)
 
-      JottoConsole.new jotto
+      Console.new jotto
     end
 
     describe '#game' do
