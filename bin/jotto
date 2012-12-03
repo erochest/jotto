@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+require 'jotto'
+
+dictionary = Jotto::Dictionary.new
+dictionary.load_file('/usr/share/dict/words')
+          .filter_length(5)
+          .filter_duplicate_letters()
+game = Jotto::Game.new(20, dictionary)
+Jotto::Console.new(game).game
+
+
+
