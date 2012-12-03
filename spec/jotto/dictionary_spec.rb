@@ -1,5 +1,5 @@
 
-require 'dictionary'
+require 'spec_helper'
 
 module Jotto
   describe Dictionary do

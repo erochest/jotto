@@ -1,6 +1,6 @@
 
-require 'jotto_console'
-require 'utils'
+require 'spec_helper'
+#require '../utils'
 
 module Jotto
   def add_fail(console)

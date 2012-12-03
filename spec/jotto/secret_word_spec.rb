@@ -1,5 +1,5 @@
 
-require 'secret_word'
+require 'spec_helper'
 
 module Jotto
   def rand_word(length=10)
