@@ -1,5 +1,6 @@
+module Jotto
+  class JottoConsole
 
-class JottoConsole
-
+  end
 end
 

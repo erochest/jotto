@@ -1,5 +1,6 @@
+module Jotto
+  class SecretWord
 
-class SecretWord
-
+  end
 end
 

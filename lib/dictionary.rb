@@ -1,5 +1,6 @@
+module Jotto
+  class Dictionary
 
-class Dictionary
-
+  end
 end
 

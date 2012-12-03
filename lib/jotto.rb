@@ -1,5 +1,6 @@
+module Jotto
+  class Jotto
 
-class Jotto
-
+  end
 end
 
