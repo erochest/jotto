@@ -1,21 +1,28 @@
 
-require 'spec_helper'
-#require '../utils'
+require 'jotto/console'
 
 module Jotto
-  def add_fail(console)
-    console.jotto.stub(:guess).add_return(
+  def self.add_fail(console)
+    console.jotto.stub(:guess).and_return(
       {:guess => 1, :won => false, :over => false, :jots => 1 },
       {:guess => 2, :won => false, :over => false, :jots => 2 },
       {:guess => 3, :won => false, :over => true,  :jots => 3 }
     )
   end
 
-  def add_success(console)
-    console.jotto.stub(:guess).add_return(
+  def self.add_success(console)
+    console.jotto.stub(:guess).and_return(
       {:guess => 1, :won => false, :over => false, :jots => 1 },
       {:guess => 2, :won => true,  :over => true,  :jots => 2 }
     )
+  end
+
+  def self.accum_stdout
+    buffer = []
+    STDOUT.should_receive(:puts).at_least(:once) do |*args|
+      buffer << args.join(" ")
+    end
+    return buffer
   end
 
   describe Console do
@@ -25,85 +32,84 @@ module Jotto
 
       jotto = double('jotto')
       jotto.stub(:secret => secret)
-      jotto.stub(:guess_count => 0)
+      jotto.stub(:guess_count).and_return(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
       jotto.stub(:max_guess_count => 3)
+      jotto.stub(:new_game)
 
       Console.new jotto
     end
 
     describe '#game' do
       it 'should be stoppable by entering "Q!"' do
-        output = SpecUtils.capture_output "Q!\n" do
-          subject.game
+        buffer = []
+        n = 0
+
+        STDIN.stub(:gets).and_return("Q!")
+        STDOUT.should_receive(:puts).exactly(3).times do |*args|
+          n += 1
+          buffer << args.join(' ')
         end
-        # One for the introduction, one for the prompt, and one for saying bye.
-        output[:output].lines.count.should eq 3
+        subject.game
+
+        buffer.length.should eq(3)
+        buffer[2].should =~ /bye/i
       end
 
       it 'should call Jotto#new_game before each game.' do
-        output = SpecUtils.capture_output "Q!\n" do
-          subject.game
-        end
+        STDIN.stub(:gets).and_return("Q!")
+        STDOUT.stub(:puts)
         subject.jotto.should_receive(:new_game).once
+        subject.game
       end
 
       it 'should tell the user how many letters are in the secret word.' do
-        output = SpecUtils.capture_output "Q!\n" do
-          subject.game
-        end
-        output[:output].should =~ /5-letter/
+        buffer = Jotto::accum_stdout
+        STDIN.stub(:gets).and_return("Q!")
+        subject.game
+        buffer.join("\n").should =~ /5-letter/
       end
 
       it 'should list the number of the guess.' do
-        output = SpecUtils.capture_output "Q!\n" do
-          subject.game
-        end
-        output[:output].should =~ /Guess #?\s*1/
+        buffer = Jotto::accum_stdout
+        STDIN.stub(:gets).and_return("Q!")
+        subject.game
+        buffer.join("\n").should =~ /Guess #?\s*1/
       end
 
       it 'should show the possible number of guesses.' do
-        output = SpecUtils.capture_output "Q!\n" do
-          subject.game
-        end
-        output[:output].should =~ /of 3/
-      end
-
-      it 'should increment the guess number after each guess.' do
-        add_fail subject
-        output = SpecUtils.capture_output "aaaaa\nQ!\n" do
-          subject.game
-        end
-        output[:output].should =~ /Guess #?\s1/
-        output[:output].should =~ /Guess #?\s2/
-      end
-
-      it 'should display the number of matching letters in the guess.' do
-        add_fail subject
-        input = "aaaaa\nbbbbb\ncccccc\n"
-        output = SpecUtils.capture_output input do
-          subject.game
-        end
-        output[:output].should =~ /1 jot/
-        output[:output].should =~ /2 jots/
-        output[:output].should =~ /3 jots/
+        buffer = Jotto::accum_stdout
+        STDIN.stub(:gets).and_return("Q!")
+        subject.game
+        buffer.join("\n").should =~ /of 3/
       end
 
       it 'should should quit if the player has not guess the right word soon enough.' do
-        add_fail subject
-        input = "aaaaa\nbbbbb\nccccc\n"
-        output = SpecUtils.capture_output input do
-          subject.game
-        end
-        output[:output].lines.to_a[-1].should =~ /lost/i
+        Jotto::add_fail subject
+        buffer = Jotto::accum_stdout
+        STDIN.stub(:gets).and_return("aaaaa\n", "bbbbb\n", "ccccc\n")
+        subject.game
+        buffer[-1].should =~ /lost/i
       end
 
       it 'should stop when the player guesses the right word.' do
-        add_success subject
-        input = "aaaaa\nbbbbb\n"
-        output = SpecUtils.capture_output input do
-          subject.game
-        end
-        output[:output].lines.to_a[-1].should =~ /won/i
+        Jotto::add_success subject
+        buffer = Jotto::accum_stdout
+        STDIN.stub(:gets).and_return("aaaaa\n", "bbbbb\n")
+        subject.game
+        buffer[-1].should =~ /won/i
+      end
+
+      it 'should display the number of matching letters in the guess.' do
+        Jotto::add_fail subject
+        buffer = Jotto::accum_stdout
+        STDIN.stub(:gets).and_return("aaaaa\n", "bbbbb\n", "ccccc\n", "Q!\n")
+
+        subject.game
+
+        output = buffer.join("\n")
+        output.should =~ /1 jot/
+        output.should =~ /2 jots/
+        output.should =~ /3 jots/
       end
     end
 

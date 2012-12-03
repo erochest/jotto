@@ -1,17 +1,19 @@
 
-require 'jotto'
+require 'jotto/game'
+
 module Jotto
-  describe Game do
+  describe Jotto::Game do
     subject do
       dict = double('dictionary')
       dict.stub(:random_word).and_return('zzzzz', 'yyyyy')
 
       secret = double('secret')
-      secret.stub(:is_word?).and_return(false, false, true)
+      secret.stub(:is_word?).and_return(false)
       secret.stub(:word => 'abcde')
+      secret.stub(:word=)
       secret.stub(:get_matches).and_return(4, 3, 2)
 
-      Game.new(10, dict, secret)
+      Jotto::Game.new(10, dict, secret)
     end
 
     it "should initialize to no guesses." do
@@ -32,20 +34,20 @@ module Jotto
       end
 
       it "should select a new word." do
-        subject.new_game
         subject.secret.should_receive(:word=).with('zzzzz')
+        subject.new_game
       end
     end
 
     describe '#guess' do
-      it "should return a hash with the keys :guess, :won, :over, :matches." do
+      it "should return a hash with the keys :guess_count, :won, :over, :jots." do
         guess = subject.guess('aaaaa')
-        guess.keys.sort.should eq([:guess, :matches, :over, :won])
+        guess.keys.sort.should eq([:guess_count, :jots, :over, :won])
       end
 
       it "should return the guess count." do
-        subject.guess('aaaaa')[:guess].should eq(1)
-        subject.guess('bbbbb')[:guess].should eq(2)
+        subject.guess('aaaaa')[:guess_count].should eq(1)
+        subject.guess('bbbbb')[:guess_count].should eq(2)
       end
 
       it "should return whether the game is over." do
@@ -63,12 +65,16 @@ module Jotto
       end
 
       it "should increment the number of guesses." do
-        subject.guess('aaaaa')[:guess].should eq(1)
-        subject.guess('abbbb')[:guess].should eq(2)
-        subject.guess('abccc')[:guess].should eq(3)
+        subject.guess('aaaaa')[:guess_count].should eq(1)
+        subject.guess('abbbb')[:guess_count].should eq(2)
+        subject.guess('abccc')[:guess_count].should eq(3)
       end
 
       it "should indicate that the game is over and won when given the secret." do
+        subject.secret.should_receive(:is_word?)
+                      .exactly(3).times
+                      .and_return(false, false, true)
+
         subject.guess('aaaaa')[:won].should eq(false)
         subject.guess('abbbb')[:won].should eq(false)
         subject.guess('abccc')[:won].should eq(true)
